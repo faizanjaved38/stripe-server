@@ -1,0 +1,6 @@
+{
+    "require": {
+        "stripe/stripe-php": "^14.4",
+        "barryvdh/laravel-cors": "^3.0"
+    }
+}
