@@ -2,7 +2,6 @@
 
 require_once '../vendor/autoload.php';
 require_once '../secrets.php';
-require_once "../db_conn.php";
 \Stripe\Stripe::setApiKey($stripeSecretKey);
 
 header('Content-Type: application/json');
@@ -17,7 +16,6 @@ try {
     'lookup_keys' => [$_POST['lookup_key']],
     'expand' => ['data.product']
   ]);
-
   $checkout_session = \Stripe\Checkout\Session::create([
     'line_items' => [[
       'price' => $prices->data[0]->id,
@@ -25,7 +23,10 @@ try {
     ]],
     'mode' => 'subscription',
     'success_url' => $YOUR_DOMAIN . '/success.html?session_id={CHECKOUT_SESSION_ID}',
-    'cancel_url' => $YOUR_DOMAIN . '/cancel.html',
+    'cancel_url' => $YOUR_DOMAIN . '/checkout.html?hostname='.$_POST['hostname'],
+    'metadata' => [
+      'hostname' => $_POST['hostname']
+    ]
   ]);
     // Redirect after successful insertion
     header("HTTP/1.1 303 See Other");

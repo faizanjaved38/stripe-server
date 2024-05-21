@@ -43,42 +43,45 @@ try {
 
 // Handle the event
 switch ($event->type) {
-  case 'payment_intent.succeeded':
-    $paymentIntent = $event->data->object;
-    echo ($paymentIntent);
-    $stmt = $conn->prepare("INSERT INTO subscriptions (hostname, customer_id, billing_session) VALUES (?, ?, ?)");
-    // $hostname = $_POST['hostname'];
-    // $customer_id = $checkout_session->customer;
-    $hostname ='hostname11';
-    $customer_id = 'customer_id11';
-    $billing_session = $paymentIntent->url;
-    $stmt->bind_param("sss", $hostname, $customer_id, $billing_session);
+  case 'checkout.session.completed':
+    $checkout = $event->data->object;
+    // Verify the payment status and subscription state
+    if ($checkout->payment_status === 'paid' && isset($checkout->subscription)) {
+        $hostname = $checkout->metadata->hostname;
+        $customer_id = $checkout->customer;
+        $subscription_id = $checkout->subscription;
+        $user_email = $checkout->customer_details->email;
+        $user_name = $checkout->customer_details->name;
+        // Prepare and bind
+        $stmt = $conn->prepare("INSERT INTO subscriptions (hostname, customer_id, subscription_id ,user_email ,user_name) VALUES (?, ?, ? ,? ,?)");
+        $stmt->bind_param("sssss", $hostname, $customer_id, $subscription_id, $user_email, $user_name);
+        // Execute the statement and check for errors
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Error storing subscription information: ' . $conn->error]);
+        }
+        $stmt->close();
+    }
+  break;
   
+  case 'customer.subscription.deleted':
+    $subscription = $event->data->object;
+    $customer_id = $subscription->customer;
+    $subscription_id = $subscription->id;
+    
+    // Prepare the statement to delete the subscription entry
+    $stmt = $conn->prepare("DELETE FROM subscriptions WHERE customer_id = ? OR subscription_id = ?");
+    $stmt->bind_param("ss", $customer_id, $subscription_id);
+
+    // Execute the statement and check for errors
     if ($stmt->execute()) {
-      echo json_encode(['success' => true]);
+        echo json_encode(['success' => true]);
     } else {
-      echo json_encode(['success' => false, 'error' => 'Error storing subscription information: ' . $conn->error]);
+        echo json_encode(['success' => false, 'error' => 'Error deleting subscription information: ' . $conn->error]);
     }
     $stmt->close();
-    break;
-    case 'payment_intent.succeeded':
-      $paymentIntent = $event->data->object;
-      echo ($paymentIntent);
-      $stmt = $conn->prepare("INSERT INTO subscriptions (hostname, customer_id, billing_session) VALUES (?, ?, ?)");
-      // $hostname = $_POST['hostname'];
-      // $customer_id = $checkout_session->customer;
-      $hostname ='hostname11';
-      $customer_id = 'customer_id11';
-      $billing_session = $paymentIntent->url;
-      $stmt->bind_param("sss", $hostname, $customer_id, $billing_session);
-    
-      if ($stmt->execute()) {
-        echo json_encode(['success' => true]);
-      } else {
-        echo json_encode(['success' => false, 'error' => 'Error storing subscription information: ' . $conn->error]);
-      }
-      $stmt->close();
-      break;
+  break;
   default:
     echo 'Received unknown event type ' . $event->type;
 }

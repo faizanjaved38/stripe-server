@@ -7,16 +7,15 @@ require_once '../secrets.php';
 
 header('Content-Type: application/json');
 
-$YOUR_DOMAIN = 'http://localhost:4242/success.html';
-
 try {
   $checkout_session = \Stripe\Checkout\Session::retrieve($_POST['session_id']);
+  $hostname = $checkout_session->metadata->hostname;
   $return_url = $YOUR_DOMAIN;
 
   // Authenticate your user.
   $session = \Stripe\BillingPortal\Session::create([
     'customer' => $checkout_session->customer,
-    'return_url' => $return_url,
+    'return_url' => "http://{$hostname}:8443/admin",
   ]);
   header("HTTP/1.1 303 See Other");
   header("Location: " . $session->url);

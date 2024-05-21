@@ -12,13 +12,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 section {
-  background: #ffffff;
   display: flex;
   flex-direction: column;
-  width: 400px;
   height: 112px;
   border-radius: 6px;
-  justify-content: space-between;
   margin: 10px;
 }
 .product {
@@ -44,20 +41,13 @@ p {
   justify-content: center;
   box-sizing: border-box;
 }
-svg {
-  border-radius: 6px;
-  margin: 10px;
-  width: 54px;
-  height: 57px;
-}
 h3,
 h5 {
   font-style: normal;
   font-weight: 500;
-  font-size: 14px;
   line-height: 20px;
   letter-spacing: -0.154px;
-  color: #242d60;
+  color: white;
   margin: 0;
 }
 h5 {
